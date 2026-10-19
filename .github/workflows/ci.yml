@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies (clean, lockfile-based)
@@ -35,6 +35,9 @@ jobs:
 
       - name: Unit and integration tests
         run: npm test
+
+      - name: Install Playwright Chromium browser
+        run: npx playwright install --with-deps chromium
 
       - name: Playwright E2E tests
         run: npm run test:e2e

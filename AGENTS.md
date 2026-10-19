@@ -25,8 +25,9 @@ tests/           Vitest unit/integration + Playwright E2E
 5. **Branches.** `main` is protected. Work on feature branches; open PRs; CI must pass before merge.
 6. **Tests co-located.** `*.test.ts` next to source, or under `tests/`.
 7. **No secrets in code.** API keys go in the OS keychain (keytar, main process only). `.env` is gitignored. Never log credentials or PII.
-8. **DOMPurify prevents XSS, not prompt injection.** Prompt-injection defense is in the system prompt + strict output schema + output validation.
-9. **Verification must fail hard.** `lint`, `typecheck`, `test`, and `test:e2e` all exit non-zero on failure. CI gates on all of them.
+8. **Database path override for tests.** `openDatabase(dbPath)` in `src/main/db.ts` accepts an optional `dbPath`. Tests must inject temp paths under `os.tmpdir()` and must never open the real user database at `app.getPath('userData')/app.db`.
+9. **DOMPurify prevents XSS, not prompt injection.** Prompt-injection defense is in the system prompt + strict output schema + output validation.
+10. **Verification must fail hard.** `lint`, `typecheck`, `test`, and `test:e2e` all exit non-zero on failure. CI gates on all of them.
 
 ## Scripts
 - `npm run dev` — start Vite dev server (Electron loads localhost:5173)

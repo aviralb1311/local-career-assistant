@@ -167,7 +167,7 @@ Relationships: `fit_evaluations` references `cv_versions` + `job_descriptions`; 
 | Phase | Work | Depends on | Deliverable |
 |-------|------|------------|-------------|
 | **0** | Repo scaffold: Electron + Vite + React + TS, eslint/prettier/tsconfig, electron-builder config, CI workflow, docs folder structure, `AGENTS.md` conventions | — | Buildable dev app, `npm run dev` works |
-| **1** | Data layer: SQLite connection (better-sqlite3 in preload), WAL mode, transactional numbered SQL migrations (applied in a transaction, idempotent, integrity_check on startup), schema (profiles, cv_versions, job_descriptions, applications, audit_log, settings, schema_migrations), backup/restore (file copy with dated backups folder), CRUD services, automated restore tests | Phase 0 | Working local DB with safe migrations, transactions, backups, and passing restore tests |
+| **1** | Data layer: SQLite connection (better-sqlite3 in main process only), default rollback journal mode (no WAL in Phase 1), transactional numbered SQL migrations applied internally at startup, `schema_migrations` tracking table, `PRAGMA integrity_check` on startup, narrowly scoped read-only IPC (`db:ping`, `db:version`), isolated tests using temp DB paths, better-sqlite3 ABI verification with Electron runtime | Phase 0 | Working local DB persistence infrastructure with safe migrations and version tracking |
 | **2** | AI layer: `LLMProvider` interface, Ollama provider (HTTP), OpenAI-compatible provider stub, consent gate + audit logging, settings UI (provider/model/cloud toggle), keychain secret storage | Phase 1 | Local AI callable from app; cloud disabled by default |
 | **3** | Core flow UI: CV import/paste, profile editor, JD editor, fit evaluation view (score, verdict, evidence, suggestions), tailored CV/cover letter generator, preview + export (Markdown/text) | Phases 1–2 | End-to-end local CV→JD→evaluation→document flow |
 | **4** | Application tracking: applications table UI, status pipeline, dates, notes, link to JD; "export all data" + restore from backup in settings | Phases 1–3 | Full MVP feature set complete |
@@ -218,10 +218,45 @@ The `electron-builder.json` was adjusted after the first production build attemp
 
 CI audit configuration: `npm audit --audit-level=critical` runs without `|| true`, so critical findings fail the CI build visibly. Moderate and high findings are reported but do not block CI at this stage; they are reviewed as part of the dependency-upgrade follow-up task.
 
+### Phase 1 persistence infrastructure documentation
+
+#### Database location
+The SQLite database is stored at `app.getPath('userData')/app.db`:
+- Linux: `~/.local-career-assistant/app.db`
+- macOS: `~/Library/Application Support/Local Career Assistant/app.db`
+- Windows: `%APPDATA%\Local Career Assistant\app.db`
+
+The path can be overridden for testing by passing a `dbPath` argument to `openDatabase(dbPath)` in `src/main/db.ts`. Tests always inject temp paths and never open the real user database.
+
+#### Journal mode decision (Phase 1)
+SQLite's default rollback journal mode (`journal_mode = DELETE`) is used in Phase 1. WAL mode is intentionally not enabled.
+
+Rationale:
+- Single-user desktop app with one writer (the main process only). No concurrent writer contention to solve.
+- WAL creates sidecar files (`app.db-wal`, `app.db-shm`) that complicate backup/restore (must checkpoint or copy all three files).
+- Default journal mode gives a single-file database, simpler for backup/restore.
+
+WAL can be revisited in a later phase if read/write concurrency becomes a requirement. If enabled later, backup/restore must run `PRAGMA wal_checkpoint(TRUNCATE)` before copying the database file.
+
+#### Migration mechanism
+Migration files are numbered `.sql` files in `src/main/migrations/` (e.g., `001_init.sql`). A build step (`scripts/copy-migrations.js`) copies them to `dist/electron/migrations/` before packaging. `electron-builder.json` includes `dist/electron/migrations/**/*` in the packaged app.
+
+At startup, the main process:
+1. Opens the SQLite database with `PRAGMA foreign_keys = ON` and `PRAGMA synchronous = NORMAL`.
+2. Runs `PRAGMA integrity_check` and reports failures without deleting data.
+3. Applies pending migrations in numeric order, each inside its own `BEGIN IMMEDIATE ... COMMIT` transaction.
+4. Records each applied version in `schema_migrations`.
+
+A failed migration rolls back entirely, preserves all existing data, and leaves the recorded schema version unchanged. Migration failure is distinct from database corruption.
+
+#### Main-process ownership
+SQLite and filesystem access live exclusively in `src/main/`. The renderer has no direct database access. IPC is narrowly scoped and read-only (`db:ping`, `db:version`). Migration execution is internal to the main process and is not exposed to the renderer.
+
+
 | Phase | Definition of done |
 |-------|--------------------|
 | 0 | `npm run dev` launches Electron + Vite + React; `npm run lint`, `npm run typecheck`, `npm test` pass; CI workflow runs on push; `AGENTS.md` and docs folders exist |
-| 1 | SQLite connects in WAL mode; all numbered migrations apply transactionally and are idempotent; `PRAGMA integrity_check` passes on startup; backup and restore round-trip without data loss; restore tests automated and passing; CRUD services for all MVP tables work |
+| 1 | SQLite connects at `app.getPath('userData')/app.db`; default rollback journal mode (no WAL); foreign keys enabled; all numbered migrations apply transactionally and are idempotent; failed migrations roll back with version unchanged; `PRAGMA integrity_check` runs on startup and failures are reported without deleting data; read-only IPC (`db:ping`, `db:version`) only; tests use injected temp DB paths, never the real user database; better-sqlite3 verified compatible with Electron 28 runtime; migration files bundled in packaged app |
 | 2 | `LLMProvider` interface implemented; Ollama provider calls local model and returns structured output; OpenAI-compatible provider stub exists; cloud disabled by default; per-action consent modal + `audit_log` recording; no secrets or PII in logs |
 | 3 | CV import/paste → editable profile; JD paste → fit evaluation returns score + verbatim CV evidence quotes; tailored CV + cover letter generated only from CV evidence (no invented qualifications); preview + Markdown/text export |
 | 4 | Applications table with status pipeline, dates, notes, JD linking; "export all data" and restore-from-backup in settings; full MVP feature set complete end-to-end |

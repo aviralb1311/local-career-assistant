@@ -36,12 +36,15 @@ npm run audit      # npm audit
 ```
 
 ## Data location
-All personal data is stored in a single SQLite file (`app.db`) under your platform's user data directory:
-- Linux: `~/.local-career-assistant/`
-- macOS: `~/Library/Application Support/Local Career Assistant/`
-- Windows: `%APPDATA%\Local Career Assistant\`
 
-Backups are stored in a `backups/` subdirectory next to the database.
+All personal data is stored in a single SQLite file (`app.db`) under your platform's user data directory:
+- Linux: `~/.local-career-assistant/app.db`
+- macOS: `~/Library/Application Support/Local Career Assistant/app.db`
+- Windows: `%APPDATA%\Local Career Assistant\app.db`
+
+The database uses SQLite's default rollback journal mode (single file, no WAL sidecar files in Phase 1).
+
+Backups are not yet implemented (planned for a later phase). Until then, manually copy the `app.db` file to back up your data.
 
 ## Security
 - Cloud AI is off by default.
