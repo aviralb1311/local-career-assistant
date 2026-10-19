@@ -183,6 +183,41 @@ Relationships: `fit_evaluations` references `cv_versions` + `job_descriptions`; 
 - Playwright E2E configured to run on pull requests and pushes to `main`.
 - DOMPurify prevents XSS; it does NOT independently prevent prompt injection. Prompt-injection defense lives in the system prompt + strict output schema + output validation (see risk table).
 
+### Phase 0 build and dependency-audit adjustments (post-review)
+
+#### Electron Builder configuration changes
+The `electron-builder.json` was adjusted after the first production build attempt:
+
+- Removed `directories.app: "dist/electron"`: electron-builder expects a `package.json` in the app directory when using the two-package structure. The `tsc -p tsconfig.node.json` compile step only emits JavaScript to `dist/electron/` with no `package.json`, so the build failed with "Cannot find package.json in the dist/electron". Removing `directories.app` causes electron-builder to use the root `package.json` as the application metadata, which is correct for a single-package structure.
+- Removed `extraMetadata.main`: no longer needed once `directories.app` is removed; the `main` field in the root `package.json` (`dist/electron/main/index.js`) is used directly.
+- Added `author.email` to `package.json`: required by electron-builder for Linux `.deb` target packaging (maintainer field). Set to `Local Career Assistant <maintainer@localcareerassistant.local>`.
+
+#### npm audit findings (Phase 0)
+`npm audit` reports 33 vulnerabilities across the development toolchain:
+
+| Severity | Count |
+|----------|-------|
+| Critical | 4 |
+| High | 21 |
+| Moderate | 8 |
+| Low | 0 |
+| Info | 0 |
+
+**Direct vulnerabilities (8):** `@typescript-eslint/eslint-plugin` (high), `@typescript-eslint/parser` (high), `@vitest/ui` (critical), `electron` (high), `electron-builder` (high), `tailwindcss` (high), `vite` (high), `vitest` (critical).
+
+**Transitive vulnerabilities (25):** includes `tar` (critical), `tinypool` (critical), `app-builder-lib` (high), `extract-zip` (high), `builder-util-runtime` (high), and others.
+
+**Classification:** All reported findings are in development/tooling dependencies only. The production runtime dependencies (`better-sqlite3`, `keytar`, and their transitive runtime deps) are not flagged.
+
+**Security note:** Although the findings are in devDependencies, build tools can still affect the integrity and security of shipped releases (e.g., a compromised bundler or packager could inject code into the packaged application). These findings must not be ignored silently.
+
+**Remediation plan:** Do not run `npm audit fix --force` blindly, as all available fixes require semver-major breaking upgrades to the development toolchain (Electron, Vite, Vitest, Tailwind, TypeScript ESLint). A deliberate dependency-upgrade task is tracked as a follow-up:
+- Test each major-version upgrade in isolation on a feature branch.
+- Run lint, typecheck, unit tests, E2E, and production build after each upgrade.
+- Commit only when all verification passes.
+
+CI audit configuration: `npm audit --audit-level=critical` runs without `|| true`, so critical findings fail the CI build visibly. Moderate and high findings are reported but do not block CI at this stage; they are reviewed as part of the dependency-upgrade follow-up task.
+
 | Phase | Definition of done |
 |-------|--------------------|
 | 0 | `npm run dev` launches Electron + Vite + React; `npm run lint`, `npm run typecheck`, `npm test` pass; CI workflow runs on push; `AGENTS.md` and docs folders exist |

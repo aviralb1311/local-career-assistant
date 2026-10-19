@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies (clean, lockfile-based)
         run: npm ci
 
-      - name: Dependency audit (informational; transitive deps only)
-        run: npm audit --audit-level=critical || true
+      - name: Dependency audit (critical findings fail CI)
+        run: npm audit --audit-level=critical
 
       - name: Lint
         run: npm run lint

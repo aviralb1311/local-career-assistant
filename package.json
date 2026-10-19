@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "description": "Local-first AI Career Assistant",
-  "author": "",
+  "author": "Local Career Assistant <maintainer@localcareerassistant.local>",
   "license": "MIT",
   "main": "dist/electron/main/index.js",
   "scripts": {
