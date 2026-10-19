@@ -1,0 +1,25 @@
+{
+  "appId": "com.localcareerassistant.app",
+  "productName": "Local Career Assistant",
+  "directories": {
+    "output": "release",
+    "app": "dist/electron"
+  },
+  "files": [
+    "dist/electron/main/**/*",
+    "dist/electron/preload/**/*",
+    "dist/renderer/**/*"
+  ],
+  "extraMetadata": {
+    "main": "dist/electron/main/index.js"
+  },
+  "linux": {
+    "target": ["AppImage", "deb"]
+  },
+  "mac": {
+    "target": ["dmg"]
+  },
+  "win": {
+    "target": ["nsis"]
+  }
+}
