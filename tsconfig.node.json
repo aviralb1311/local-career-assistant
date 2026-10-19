@@ -17,6 +17,6 @@
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["src/main/**/*", "src/preload/**/*"],
+  "include": ["src/main/**/*", "src/preload/**/*", "scripts/**/*"],
   "exclude": ["src/renderer/**/*", "node_modules", "dist"]
 }

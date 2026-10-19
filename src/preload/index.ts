@@ -1,8 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 // Allowed IPC channels. Renderer may only invoke these.
-// Phase 1 adds database-service channels here; nothing is added without review.
-const allowedChannels = ['app:ping'] as const;
+// Phase 1 adds read-only database channels; migrations run internally
+// at startup and are not exposed to the renderer.
+const allowedChannels = ['app:ping', 'db:ping', 'db:version'] as const;
 
 type AllowedChannel = (typeof allowedChannels)[number];
 
@@ -16,6 +17,11 @@ const electronAPI = {
   },
 
   ping: (): Promise<string> => ipcRenderer.invoke('app:ping'),
+
+  dbPing: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('db:ping'),
+
+  getSchemaVersion: (): Promise<{ version: number }> =>
+    ipcRenderer.invoke('db:version'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

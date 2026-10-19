@@ -10,12 +10,13 @@
   "main": "dist/electron/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build:main": "tsc -p tsconfig.node.json",
+    "build:main": "tsc -p tsconfig.node.json && npm run build:copy-migrations",
+    "build:copy-migrations": "node scripts/copy-migrations.js",
     "build:renderer": "vite build",
     "build": "npm run build:main && npm run build:renderer && electron-builder",
     "lint": "eslint . --ext ts,tsx,js",
     "typecheck": "tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.main.config.ts",
     "test:e2e": "playwright test",
     "audit": "npm audit"
   },
