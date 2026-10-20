@@ -7,9 +7,12 @@ import {
   openDatabase,
 } from './db.js';
 import { applyMigrations, checkIntegrity } from './migrate.js';
+import { AIService } from './ai/service.js';
+import { registerAIHandlers } from './ipc/ai.js';
 
 let mainWindow: BrowserWindow | null = null;
 let dbPath: string = getDefaultDbPath();
+let aiService: AIService | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -34,6 +37,11 @@ function createWindow() {
   });
 }
 
+function sanitizeErrorMessage(message: string): string {
+  // Strip absolute file paths to avoid leaking userData directory locations.
+  return message.replace(/\/[^\s]*/g, '[path]').replace(/[A-Za-z]:\\[^\s]*/g, '[path]');
+}
+
 function initializeDatabase(): void {
   try {
     const migrationsDir = path.join(__dirname, '..', 'migrations');
@@ -47,14 +55,24 @@ function initializeDatabase(): void {
     }
 
     applyMigrations(db, migrationsDir);
+
+    // Initialize AI service after migrations are applied.
+    aiService = new AIService(db);
   } catch (error) {
-    const message = (error as Error).message;
+    const message = sanitizeErrorMessage((error as Error).message);
     dialog.showErrorBox(
       'Database initialization failed',
       `Local Career Assistant could not open its database.\n\n${message}\n\nYour data has not been modified. You may restore from a backup if available.`
     );
     throw error;
   }
+}
+
+function requireAIService(): AIService {
+  if (!aiService) {
+    throw new Error('AI service is not initialized');
+  }
+  return aiService;
 }
 
 app.whenReady().then(() => {
@@ -75,6 +93,8 @@ app.whenReady().then(() => {
       .get() as { version: number | null };
     return { version: row.version ?? 0 };
   });
+
+  registerAIHandlers(ipcMain, requireAIService);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

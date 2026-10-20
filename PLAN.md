@@ -1,10 +1,14 @@
-# Local Career Assistant — Project Plan (Planning Only)
+# Local Career Assistant — Project Plan
 
-Status: **Proposed. No application code written yet. Awaiting your approval before implementation.**
+Status: **Implemented. Phases 0–2 complete. Awaiting approval to proceed to Phase 3.**
 
 ## 1. Repository status
-- `/home/avrbt/Downloads/local-career-assistant` is a greenfield git repo with no tracked files, no commits, no branches.
-- Everything below is a recommendation; nothing has been created or changed.
+- `/home/avrbt/Downloads/local-career-assistant` is a git repo on branch `feat/phase-1-persistence`
+- Phase 0 commit `41359cb` done; all verification (lint, typecheck, test, e2e, build) passes exit 0
+- Phase 1 persistence hardening applied (db lifecycle guard + idempotent close, error dialog sanitization, migration copy cleanup, build command integration)
+- Phase 2 AI layer implemented (providers, consent gating, secrets management, audit log, settings UI)
+
+## 2. Goals and non-goals
 
 ---
 
@@ -164,14 +168,14 @@ Relationships: `fit_evaluations` references `cv_versions` + `job_descriptions`; 
 
 ## 8. Phased implementation plan with dependencies
 
-| Phase | Work | Depends on | Deliverable |
-|-------|------|------------|-------------|
-| **0** | Repo scaffold: Electron + Vite + React + TS, eslint/prettier/tsconfig, electron-builder config, CI workflow, docs folder structure, `AGENTS.md` conventions | — | Buildable dev app, `npm run dev` works |
-| **1** | Data layer: SQLite connection (better-sqlite3 in main process only), default rollback journal mode (no WAL in Phase 1), transactional numbered SQL migrations applied internally at startup, `schema_migrations` tracking table, `PRAGMA integrity_check` on startup, narrowly scoped read-only IPC (`db:ping`, `db:version`), isolated tests using temp DB paths, better-sqlite3 ABI verification with Electron runtime | Phase 0 | Working local DB persistence infrastructure with safe migrations and version tracking |
-| **2** | AI layer: `LLMProvider` interface, Ollama provider (HTTP), OpenAI-compatible provider stub, consent gate + audit logging, settings UI (provider/model/cloud toggle), keychain secret storage | Phase 1 | Local AI callable from app; cloud disabled by default |
-| **3** | Core flow UI: CV import/paste, profile editor, JD editor, fit evaluation view (score, verdict, evidence, suggestions), tailored CV/cover letter generator, preview + export (Markdown/text) | Phases 1–2 | End-to-end local CV→JD→evaluation→document flow |
-| **4** | Application tracking: applications table UI, status pipeline, dates, notes, link to JD; "export all data" + restore from backup in settings | Phases 1–3 | Full MVP feature set complete |
-| **5** | Polish + hardening: CSP, DOMPurify on all rendered untrusted content, E2E Playwright suite, PDF export option, `SECURITY.md` threat model, performance check, release build | Phases 1–4 | Hardened MVP ready for release candidate |
+| Phase | Work | Depends on | Status | Deliverable |
+|-------|------|------------|--------|-------------|
+| **0** | Repo scaffold: Electron + Vite + React + TS, eslint/prettier/tsconfig, electron-builder config, CI workflow, docs folder structure, `AGENTS.md` conventions | — | **Complete** | Buildable dev app, `npm run dev` works |
+| **1** | Data layer: SQLite connection (better-sqlite3 in main process only), default rollback journal mode (no WAL in Phase 1), transactional numbered SQL migrations applied internally at startup, `schema_migrations` tracking table, `PRAGMA integrity_check` on startup, narrowly scoped read-only IPC (`db:ping`, `db:version`), isolated tests using temp DB paths, better-sqlite3 ABI verification with Electron runtime | Phase 0 | **Complete** | Working local DB persistence infrastructure with safe migrations and version tracking |
+| **2** | AI layer: `LLMProvider` interface, Ollama provider (HTTP), OpenAI-compatible provider stub, consent gate + audit logging, settings UI (provider/model/cloud toggle), keychain secret storage | Phase 1 | **Complete** | Local AI callable from app; cloud disabled by default |
+| **3** | Core flow UI: CV import/paste, profile editor, JD editor, fit evaluation view (score, verdict, evidence, suggestions), tailored CV/cover letter generator, preview + export (Markdown/text) | Phases 1–2 | Pending | End-to-end local CV→JD→evaluation→document flow |
+| **4** | Application tracking: applications table UI, status pipeline, dates, notes, link to JD; "export all data" + restore from backup in settings | Phases 1–3 | Pending | Full MVP feature set complete |
+| **5** | Polish + hardening: CSP, DOMPurify on all rendered untrusted content, E2E Playwright suite, PDF export option, `SECURITY.md` threat model, performance check, release build | Phases 1–4 | Pending | Hardened MVP ready for release candidate |
 
 ### Phase 0 security and scaffolding constraints (adjusted)
 
@@ -253,14 +257,14 @@ A failed migration rolls back entirely, preserves all existing data, and leaves 
 SQLite and filesystem access live exclusively in `src/main/`. The renderer has no direct database access. IPC is narrowly scoped and read-only (`db:ping`, `db:version`). Migration execution is internal to the main process and is not exposed to the renderer.
 
 
-| Phase | Definition of done |
-|-------|--------------------|
-| 0 | `npm run dev` launches Electron + Vite + React; `npm run lint`, `npm run typecheck`, `npm test` pass; CI workflow runs on push; `AGENTS.md` and docs folders exist |
-| 1 | SQLite connects at `app.getPath('userData')/app.db`; default rollback journal mode (no WAL); foreign keys enabled; all numbered migrations apply transactionally and are idempotent; failed migrations roll back with version unchanged; `PRAGMA integrity_check` runs on startup and failures are reported without deleting data; read-only IPC (`db:ping`, `db:version`) only; tests use injected temp DB paths, never the real user database; better-sqlite3 verified compatible with Electron 28 runtime; migration files bundled in packaged app |
-| 2 | `LLMProvider` interface implemented; Ollama provider calls local model and returns structured output; OpenAI-compatible provider stub exists; cloud disabled by default; per-action consent modal + `audit_log` recording; no secrets or PII in logs |
-| 3 | CV import/paste → editable profile; JD paste → fit evaluation returns score + verbatim CV evidence quotes; tailored CV + cover letter generated only from CV evidence (no invented qualifications); preview + Markdown/text export |
-| 4 | Applications table with status pipeline, dates, notes, JD linking; "export all data" and restore-from-backup in settings; full MVP feature set complete end-to-end |
-| 5 | CSP + DOMPurify on all untrusted content; E2E Playwright suite passes with mocked AI providers; PDF export option; `SECURITY.md` threat model complete; release build via electron-builder |
+| Phase | Definition of done | Status |
+|-------|--------------------|--------|
+| 0 | `npm run dev` launches Electron + Vite + React; `npm run lint`, `npm run typecheck`, `npm test` pass; CI workflow runs on push; `AGENTS.md` and docs folders exist | **Complete** |
+| 1 | SQLite connects at `app.getPath('userData')/app.db`; default rollback journal mode (no WAL); foreign keys enabled; all numbered migrations apply transactionally and are idempotent; failed migrations roll back with version unchanged; `PRAGMA integrity_check` runs on startup and failures are reported without deleting data; read-only IPC (`db:ping`, `db:version`) only; tests use injected temp DB paths, never the real user database; better-sqlite3 verified compatible with Electron 28 runtime; migration files bundled in packaged app; openDatabase guard prevents double-open; closeDatabase is idempotent; error dialogs sanitize file paths; migration copy removes stale output before copying; build commands invoke migration copy | **Complete** |
+| 2 | `LLMProvider` interface implemented; Ollama provider calls local model and returns structured output; OpenAI-compatible provider stub exists; cloud disabled by default; per-action consent modal + `audit_log` recording; no secrets or PII in logs; AI IPC handlers (13 channels) registered in main process with narrow allow-list in preload; settings UI with provider list, cloud toggle consent-gated, read-only Ollama settings | **Complete** |
+| 3 | CV import/paste → editable profile; JD paste → fit evaluation returns score + verbatim CV evidence quotes; tailored CV + cover letter generated only from CV evidence (no invented qualifications); preview + Markdown/text export | Pending |
+| 4 | Applications table with status pipeline, dates, notes, JD linking; "export all data" and restore-from-backup in settings; full MVP feature set complete end-to-end | Pending |
+| 5 | CSP + DOMPurify on all untrusted content; E2E Playwright suite passes with mocked AI providers; PDF export option; `SECURITY.md` threat model complete; release build via electron-builder | Pending |
 
 ---
 
@@ -317,8 +321,14 @@ Security documentation: `SECURITY.md` will cover threat model, data flow, consen
 
 ## 12. Next step
 
-Please review `PLAN.md` (stack, MVP scope, phases, risks, testing). Once you approve, I will:
-1. Create the scaffold (Phase 0): `package.json`, Electron/Vite/React/TypeScript config, lint/format/CI, `AGENTS.md`, docs folders.
-2. Proceed through Phases 1–5 iteratively, running lint/typecheck/tests at each step.
+Phases 0–2 are implemented and verified (lint, typecheck, test, build all pass). E2E tests cannot run in this environment (no display server).
 
-Nothing has been changed in the repo yet. Reply with approval or any changes you want to the plan first.
+To proceed to Phase 3 (Core flow UI), implement:
+- CV import/paste, profile editor
+- JD editor
+- Fit evaluation view (score, verdict, evidence, suggestions)
+- Tailored CV/cover letter generator with preview + export
+
+To proceed to Phase 5 (polish + hardening), complete `SECURITY.md` threat model and add DOMPurify/CSP.
+
+Nothing is committed. Run `git status` and `git diff` to review all changes before committing.
