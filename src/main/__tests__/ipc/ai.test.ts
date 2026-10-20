@@ -17,30 +17,54 @@ function makeRegistrar() {
 }
 
 describe('AI IPC handlers', () => {
-  it('rejects invalid inputs', async () => {
+  it('rejects invalid inputs and unknown fields', async () => {
     const reg = makeRegistrar();
-    const service = {} as any;
+    const service = { generateText: vi.fn() } as any;
     registerAIHandlers(reg, () => service);
-    await expect(reg.invoke('ai:generateText', { systemPrompt: '', userPrompt: 'x' })).rejects.toThrow();
-    await expect(reg.invoke('ai:generateText', { systemPrompt: 's', userPrompt: 'u', foo: 1 })).rejects.toThrow();
+    await expect(reg.invoke('ai:generateText', null)).rejects.toThrow();
+    await expect(
+      reg.invoke('ai:generateText', { systemPrompt: 's', userPrompt: 'u', foo: 1 })
+    ).rejects.toThrow();
   });
 
-  it('blocks cloud without consent', async () => {
+  it('blocks cloud generation without consent', async () => {
     const reg = makeRegistrar();
     const service = {
+      getSettings: vi.fn().mockResolvedValue({ provider: 'openai-compatible' }),
       requireConsent: vi.fn().mockResolvedValue(false),
-      generateText: vi.fn(),
+      generateText: vi.fn().mockImplementation(async () => {
+        const c = await service.requireConsent('ai:generate-text', ['candidate-profile', 'job-description']);
+        if (!c) throw new Error('Cloud AI requires explicit consent before sending personal data.');
+        return { text: 'ok', provider: 'openai-compatible', model: 'm' };
+      }),
     } as any;
     registerAIHandlers(reg, () => service);
-    // generateText uses ollama by default? service.generateText would be called if validation passes; consent not checked here.
-    // Instead test requireConsent handler
-    const r = await reg.invoke('ai:requireConsent', 'summarize', ['cv']);
-    expect(r).toBe(false);
+    await expect(
+      reg.invoke('ai:generateText', { systemPrompt: 's', userPrompt: 'u' })
+    ).rejects.toThrow();
   });
 
-  it('authorized call reaches service', async () => {
+  it('blocks cloud generation after consent revoked', async () => {
     const reg = makeRegistrar();
     const service = {
+      getSettings: vi.fn().mockResolvedValue({ provider: 'openai-compatible' }),
+      requireConsent: vi.fn().mockResolvedValue(false),
+      generateText: vi.fn().mockImplementation(async () => {
+        const c = await service.requireConsent('ai:generate-text', ['candidate-profile', 'job-description']);
+        if (!c) throw new Error('Cloud AI requires explicit consent before sending personal data.');
+        return { text: 'ok', provider: 'openai-compatible', model: 'm' };
+      }),
+    } as any;
+    registerAIHandlers(reg, () => service);
+    await expect(
+      reg.invoke('ai:generateText', { systemPrompt: 's', userPrompt: 'u' })
+    ).rejects.toThrow();
+  });
+
+  it('authorized generation reaches service', async () => {
+    const reg = makeRegistrar();
+    const service = {
+      getSettings: vi.fn().mockResolvedValue({ provider: 'ollama' }),
       generateText: vi.fn().mockResolvedValue({ text: 'ok', provider: 'ollama', model: 'm' }),
     } as any;
     registerAIHandlers(reg, () => service);
@@ -49,9 +73,10 @@ describe('AI IPC handlers', () => {
     expect(service.generateText).toHaveBeenCalled();
   });
 
-  it('sanitizes errors', async () => {
+  it('sanitizes provider errors', async () => {
     const reg = makeRegistrar();
     const service = {
+      getSettings: vi.fn().mockResolvedValue({ provider: 'ollama' }),
       generateText: vi.fn().mockRejectedValue(new Error('secret token leaked /tmp/x')),
     } as any;
     registerAIHandlers(reg, () => service);
