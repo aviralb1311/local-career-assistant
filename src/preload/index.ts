@@ -104,6 +104,8 @@ const electronAPI = {
   updateApplication: (id: number, data: unknown): Promise<unknown> => ipcRenderer.invoke('tr:update', id, data),
   deleteApplication: (id: number): Promise<unknown> => ipcRenderer.invoke('tr:delete', id),
   searchApplications: (q: string): Promise<unknown> => ipcRenderer.invoke('tr:search', q),
+  createBackup: (): Promise<unknown> => ipcRenderer.invoke('backup:create'),
+  restoreBackup: (): Promise<unknown> => ipcRenderer.invoke('backup:restore'),
   exportDocument: (documentId: number, format: 'md' | 'txt'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
 
 };
