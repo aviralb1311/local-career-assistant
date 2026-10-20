@@ -61,10 +61,13 @@ export class AIService {
       },
     ];
 
-    // Ollama availability is checked lazily; mark as available if endpoint configured.
-    providers[0].status = settings.ollamaEndpoint
-      ? 'available'
-      : 'not-configured';
+    // Actually probe Ollama availability instead of assuming it from config.
+    if (!settings.ollamaEndpoint) {
+      providers[0].status = 'not-configured';
+    } else {
+      const ollama = new OllamaProvider(settings.ollamaEndpoint, settings.ollamaModel);
+      providers[0].status = (await ollama.isAvailable()) ? 'available' : 'unavailable';
+    }
 
     if (settings.provider === 'openai-compatible' && !settings.allowCloud) {
       providers[1].status = 'unavailable';
