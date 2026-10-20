@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Workflow from './Workflow';
 
 type ProviderInfo = {
   id: string;
@@ -232,6 +233,7 @@ export default function App() {
           {!settings && <p className="text-sm text-slate-500">Loading settings…</p>}
         </section>
       </main>
-    </div>
+    <Workflow />
+</div>
   );
 }

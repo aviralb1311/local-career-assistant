@@ -21,6 +21,7 @@ export const allowedChannels = [
   'ai:setSecret',
   'ai:deleteSecret',
   'ai:listAuditLog',
+  'wf:exportDocument',
 ] as const;
 
 type AllowedChannel = (typeof allowedChannels)[number];
@@ -85,6 +86,21 @@ const electronAPI = {
 
   listAuditLog: (): Promise<unknown[]> =>
     ipcRenderer.invoke('ai:listAuditLog'),
+  listCvs: (): Promise<unknown> => ipcRenderer.invoke('wf:listCvs'),
+  getCv: (id: number): Promise<unknown> => ipcRenderer.invoke('wf:getCv', id),
+  createCv: (title: string, content: string): Promise<unknown> => ipcRenderer.invoke('wf:createCv', title, content),
+  updateCv: (id: number, title: string, content: string): Promise<unknown> => ipcRenderer.invoke('wf:updateCv', id, title, content),
+  deleteCv: (id: number): Promise<unknown> => ipcRenderer.invoke('wf:deleteCv', id),
+  listJobs: (): Promise<unknown> => ipcRenderer.invoke('wf:listJobs'),
+  getJob: (id: number): Promise<unknown> => ipcRenderer.invoke('wf:getJob', id),
+  createJob: (title: string, company: string | null, url: string | null, description: string): Promise<unknown> => ipcRenderer.invoke('wf:createJob', title, company, url, description),
+  updateJob: (id: number, title: string, company: string | null, url: string | null, description: string): Promise<unknown> => ipcRenderer.invoke('wf:updateJob', id, title, company, url, description),
+  deleteJob: (id: number): Promise<unknown> => ipcRenderer.invoke('wf:deleteJob', id),
+  evaluate: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:evaluate', cvId, jobId),
+  generateDocument: (cvId: number, jobId: number, kind: 'tailored-cv' | 'cover-letter'): Promise<unknown> => ipcRenderer.invoke('wf:generateDocument', cvId, jobId, kind),
+  listDocuments: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:listDocuments', cvId, jobId),
+  exportDocument: (documentId: number, format: 'md' | 'txt'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
+
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
