@@ -24,7 +24,7 @@ export async function evaluate(
   const input: GenerateJSONInput = {
     systemPrompt,
     userPrompt,
-    schema: {},
+    schema: { score: 'number', verdict: 'string', evidence: 'string[]', supported: 'string[]', missing: 'string[]', suggestions: 'string[]' },
   };
 
   const res = await ai.generateJSON(input);
