@@ -99,6 +99,11 @@ const electronAPI = {
   evaluate: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:evaluate', cvId, jobId),
   generateDocument: (cvId: number, jobId: number, kind: 'tailored-cv' | 'cover-letter'): Promise<unknown> => ipcRenderer.invoke('wf:generateDocument', cvId, jobId, kind),
   listDocuments: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:listDocuments', cvId, jobId),
+  listApplications: (status?: string | null): Promise<unknown> => ipcRenderer.invoke('tr:list', status ?? null),
+  createApplication: (data: unknown): Promise<unknown> => ipcRenderer.invoke('tr:create', data),
+  updateApplication: (id: number, data: unknown): Promise<unknown> => ipcRenderer.invoke('tr:update', id, data),
+  deleteApplication: (id: number): Promise<unknown> => ipcRenderer.invoke('tr:delete', id),
+  searchApplications: (q: string): Promise<unknown> => ipcRenderer.invoke('tr:search', q),
   exportDocument: (documentId: number, format: 'md' | 'txt'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
 
 };
