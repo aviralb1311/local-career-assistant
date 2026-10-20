@@ -1,9 +1,8 @@
 import type { IpcRegistrar } from './ai.js';
 import { app, dialog } from 'electron';
 import path from 'node:path';
-import fs from 'node:fs';
-import { closeDatabase, getActiveDb, openDatabase } from '../db.js';
-import { applyMigrations } from '../migrate.js';
+import { closeDatabase, getActiveDb } from '../db.js';
+import { restoreBackup } from '../backup.js';
 
 export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
   ipcMainLike.handle('backup:create', async () => {
@@ -14,8 +13,10 @@ export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
     if (canceled || !filePath) return { canceled: true };
     const db = getActiveDb();
     if (!db) throw new Error('Database not initialized.');
-    await db.backup(filePath);
-    return { canceled: false, filePath };
+    // use db.backup directly via active connection
+    const tmpPath = filePath;
+    await db.backup(tmpPath);
+    return { canceled: false, filePath: tmpPath };
   });
 
   ipcMainLike.handle('backup:restore', async () => {
@@ -28,44 +29,8 @@ export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
     const backupPath = filePaths[0];
     const dbPath = path.join(app.getPath('userData'), 'app.db');
     const migrationsDir = path.join(__dirname, '..', 'migrations');
-
-    // Validate candidate
-    let candidate: ReturnType<typeof openDatabase> | null = null;
-    try {
-      candidate = openDatabase(backupPath);
-    } catch {
-      return { canceled: false, ok: false, error: 'Invalid backup file.' };
-    }
-    // integrity
-    try {
-      const rows = candidate.pragma('integrity_check') as { integrity_check: string }[];
-      if (!Array.isArray(rows) || rows.length === 0 || rows.some((r) => r.integrity_check !== 'ok')) throw new Error('integrity');
-    } catch {
-      closeDatabase(candidate);
-      return { canceled: false, ok: false, error: 'Backup failed integrity check.' };
-    }
-    closeDatabase(candidate);
-
-    // safety backup (consistent snapshot)
-    const safetyPath = dbPath + '.safety';
-    const active = getActiveDb();
-    if (active) await active.backup(safetyPath);
-
-    try {
-      closeDatabase();
-      fs.copyFileSync(backupPath, dbPath);
-      const db = openDatabase(dbPath);
-      applyMigrations(db, migrationsDir);
-      closeDatabase(db);
-      if (fs.existsSync(safetyPath)) fs.unlinkSync(safetyPath);
-      return { canceled: false, ok: true };
-    } catch (e) {
-      if (fs.existsSync(safetyPath)) {
-        fs.copyFileSync(safetyPath, dbPath);
-        fs.unlinkSync(safetyPath);
-      }
-      try { openDatabase(dbPath); } catch {}
-      return { canceled: false, ok: false, error: 'Restore failed; previous database retained.' };
-    }
+    closeDatabase();
+    const result = restoreBackup(dbPath, backupPath, migrationsDir);
+    return { canceled: false, ...result };
   });
 }
