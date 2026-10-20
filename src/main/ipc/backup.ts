@@ -46,9 +46,10 @@ export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
     }
     closeDatabase(candidate);
 
-    // safety backup
+    // safety backup (consistent snapshot)
     const safetyPath = dbPath + '.safety';
-    if (fs.existsSync(dbPath)) fs.copyFileSync(dbPath, safetyPath);
+    const active = getActiveDb();
+    if (active) await active.backup(safetyPath);
 
     try {
       closeDatabase();
