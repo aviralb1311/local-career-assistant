@@ -27,13 +27,17 @@ export function validateBackup(candidatePath: string): boolean {
   }
 }
 
-export function restoreBackup(dbPath: string, backupPath: string, migrationsDir: string): BackupResult {
+export async function restoreBackup(dbPath: string, backupPath: string, migrationsDir: string): Promise<BackupResult> {
   if (!fs.existsSync(backupPath)) return { ok: false, error: 'Backup file not found.' };
   if (!validateBackup(backupPath)) return { ok: false, error: 'Backup failed integrity check.' };
 
   const safetyPath = dbPath + '.safety';
   try {
-    if (fs.existsSync(dbPath)) fs.copyFileSync(dbPath, safetyPath);
+    // consistent safety snapshot
+    const active = openDatabase(dbPath);
+    await active.backup(safetyPath);
+    closeDatabase(active);
+
     closeDatabase();
     fs.copyFileSync(backupPath, dbPath);
     const db = openDatabase(dbPath);
@@ -43,8 +47,11 @@ export function restoreBackup(dbPath: string, backupPath: string, migrationsDir:
     return { ok: true };
   } catch {
     if (fs.existsSync(safetyPath)) {
-      fs.copyFileSync(safetyPath, dbPath);
-      fs.unlinkSync(safetyPath);
+      try {
+        fs.copyFileSync(safetyPath, dbPath);
+      } catch {
+        // keep safety file as recovery copy
+      }
     }
     try { openDatabase(dbPath); } catch {}
     return { ok: false, error: 'Restore failed; previous database retained.' };

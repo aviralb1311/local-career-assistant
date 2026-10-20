@@ -30,7 +30,7 @@ export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
     const dbPath = path.join(app.getPath('userData'), 'app.db');
     const migrationsDir = path.join(__dirname, '..', 'migrations');
     closeDatabase();
-    const result = restoreBackup(dbPath, backupPath, migrationsDir);
+    const result = await restoreBackup(dbPath, backupPath, migrationsDir);
     return { canceled: false, ...result };
   });
 }

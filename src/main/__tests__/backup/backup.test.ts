@@ -24,7 +24,7 @@ describe('backup', () => {
     db2.prepare('DELETE FROM t').run();
     closeDatabase(db2);
 
-    const res = restoreBackup(dbPath, backupPath, join(process.cwd(), 'src/main/migrations'));
+    const res = await restoreBackup(dbPath, backupPath, join(process.cwd(), "src/main/migrations"));
     expect(res.ok).toBe(true);
     const db3 = openDatabase(dbPath);
     const row = db3.prepare('SELECT x FROM t').get() as { x: string };
