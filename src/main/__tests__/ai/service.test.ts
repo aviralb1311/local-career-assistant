@@ -10,6 +10,14 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 describe('AIService', () => {
+  const originalFetch = globalThis.fetch;
+  beforeEach(() => {
+    globalThis.fetch = (async () =>
+      new Response('bad', { status: 400 })) as unknown as typeof fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
   let tempDir: string;
   let dbPath: string;
   let migrationsDir: string;
