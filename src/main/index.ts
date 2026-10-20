@@ -9,6 +9,7 @@ import {
 import { applyMigrations, checkIntegrity } from './migrate.js';
 import { AIService } from './ai/service.js';
 import { registerAIHandlers } from './ipc/ai.js';
+import { registerWorkflowHandlers } from './ipc/workflow.js';
 
 let mainWindow: BrowserWindow | null = null;
 let dbPath: string = getDefaultDbPath();
@@ -95,6 +96,7 @@ app.whenReady().then(() => {
   });
 
   registerAIHandlers(ipcMain, requireAIService);
+  registerWorkflowHandlers(ipcMain, getActiveDb, requireAIService);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
