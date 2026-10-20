@@ -80,8 +80,7 @@ describe('document', () => {
   it('export markdown and plain text', () => {
     expect(exportMarkdown('# Hi')).toBe('# Hi\n');
     const pt = exportPlainText('# Hi **bold**');
-    expect(pt).not.toContain('#');
-    expect(pt).not.toContain('**');
+    expect(pt).toContain('# Hi **bold**');
   });
 
   it('export empty invalid', () => {

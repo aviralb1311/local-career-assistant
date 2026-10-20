@@ -30,7 +30,7 @@ describe('workflow IPC', () => {
 
   it('create and list cv', async () => {
     const reg = makeRegistrar();
-    registerWorkflowHandlers(reg as any, () => db, () => ({}));
+    registerWorkflowHandlers(reg as any, () => db, () => ({}) as any);
     const cv: any = await reg.invoke('wf:createCv', 'T', 'content');
     expect(cv.id).toBeGreaterThan(0);
     const list: any = await reg.invoke('wf:listCvs');
@@ -39,13 +39,13 @@ describe('workflow IPC', () => {
 
   it('invalid id rejected', async () => {
     const reg = makeRegistrar();
-    registerWorkflowHandlers(reg as any, () => db, () => ({}));
+    registerWorkflowHandlers(reg as any, () => db, () => ({}) as any);
     await expect(reg.invoke('wf:getCv', 'x')).rejects.toThrow();
   });
 
   it('unknown field? createJob validates', async () => {
     const reg = makeRegistrar();
-    registerWorkflowHandlers(reg as any, () => db, () => ({}));
+    registerWorkflowHandlers(reg as any, () => db, () => ({}) as any);
     await expect(reg.invoke('wf:createJob', 'T', 123, null, 'd')).rejects.toThrow();
   });
 });

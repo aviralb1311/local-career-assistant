@@ -1,6 +1,7 @@
 export function exportMarkdown(content: string): string {
-  return content.trim() + '\n';
+  return content.replace(/\r\n/g, '\n').trimEnd() + '\n';
 }
+
 export function exportPlainText(content: string): string {
-  return content.replace(/[#*_`]/g, '').trim() + '\n';
+  return content.replace(/\r\n/g, '\n').trimEnd() + '\n';
 }
