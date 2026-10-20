@@ -196,6 +196,21 @@ export function validateGenerateTextInput(
 
   const obj = input as Record<string, unknown>;
 
+  const knownFields = new Set([
+    'systemPrompt',
+    'userPrompt',
+    'temperature',
+    'maxTokens',
+    'signal',
+  ]);
+  for (const key of Object.keys(obj)) {
+    if (!knownFields.has(key)) {
+      throw new ValidationError(
+        `Unknown field: ${key}. Only known fields are permitted.`
+      );
+    }
+  }
+
   return {
     systemPrompt: validatePrompt(obj.systemPrompt, 'systemPrompt'),
     userPrompt: validatePrompt(obj.userPrompt, 'userPrompt'),
@@ -215,6 +230,26 @@ export function validateGenerateJSONInput(
   }
 
   const obj = input as Record<string, unknown>;
+
+  const knownFields = new Set([
+    'systemPrompt',
+    'userPrompt',
+    'schema',
+    'temperature',
+    'maxTokens',
+    'signal',
+  ]);
+  for (const key of Object.keys(obj)) {
+    if (!knownFields.has(key)) {
+      throw new ValidationError(
+        `Unknown field: ${key}. Only known fields are permitted.`
+      );
+    }
+  }
+
+  if (!('schema' in obj) || obj.schema === undefined || obj.schema === null) {
+    throw new ValidationError('Invalid schema: must be provided.');
+  }
 
   return {
     systemPrompt: validatePrompt(obj.systemPrompt, 'systemPrompt'),
