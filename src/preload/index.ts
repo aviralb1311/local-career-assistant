@@ -21,6 +21,7 @@ export const allowedChannels = [
   'ai:setSecret',
   'ai:deleteSecret',
   'ai:listAuditLog',
+  'wf:exportDocument',
 ] as const;
 
 type AllowedChannel = (typeof allowedChannels)[number];
@@ -98,6 +99,7 @@ const electronAPI = {
   evaluate: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:evaluate', cvId, jobId),
   generateDocument: (cvId: number, jobId: number, kind: 'tailored-cv' | 'cover-letter'): Promise<unknown> => ipcRenderer.invoke('wf:generateDocument', cvId, jobId, kind),
   listDocuments: (cvId: number, jobId: number): Promise<unknown> => ipcRenderer.invoke('wf:listDocuments', cvId, jobId),
+  exportDocument: (documentId: number, format: 'md' | 'txt'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
 
 };
 
