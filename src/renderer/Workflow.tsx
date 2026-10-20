@@ -87,11 +87,11 @@ export default function Workflow() {
       <ul>{jobs.map((j) => <li key={j.id}>{j.title}</li>)}</ul>
 
       <h2>Evaluate</h2>
-      <select onChange={(e) => setSelectedCv(Number(e.target.value))}>
+      <select onChange={(e) => { const v = e.target.value; setSelectedCv(v ? Number(v) : null); setEvalResult(null); setDoc(null); } }>
         <option value="">CV</option>
         {cvs.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
       </select>
-      <select onChange={(e) => setSelectedJob(Number(e.target.value))}>
+      <select onChange={(e) => { const v = e.target.value; setSelectedJob(v ? Number(v) : null); setEvalResult(null); setDoc(null); } }>
         <option value="">Job</option>
         {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
       </select>
