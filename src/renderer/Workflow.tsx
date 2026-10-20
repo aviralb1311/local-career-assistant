@@ -1,18 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
+
+type Cv = { id: number; title: string; content: string };
+type Job = { id: number; title: string; company: string | null; url: string | null; description: string };
+type Evidence = { quote: string; verified: boolean };
+type EvalResult = { score: number; verdict: string; evidence: Evidence[]; supported: string[]; missing: string[]; suggestions: string[] };
+type Doc = { id: number; kind: string; content: string };
 export default function Workflow() {
   const [cvTitle, setCvTitle] = useState('');
   const [cvContent, setCvContent] = useState('');
-  const [cvs, setCvs] = useState<any[]>([]);
+  const [cvs, setCvs] = useState<Cv[]>([]);
   const [jobTitle, setJobTitle] = useState('');
   const [jobDesc, setJobDesc] = useState('');
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedCv, setSelectedCv] = useState<number | null>(null);
   const [selectedJob, setSelectedJob] = useState<number | null>(null);
-  const [evalResult, setEvalResult] = useState<any>(null);
-  const [doc, setDoc] = useState<any>(null);
-  const [docs, setDocs] = useState<any[]>([]);
+  const [evalResult, setEvalResult] = useState<EvalResult | null>(null);
+  const [doc, setDoc] = useState<Doc | null>(null);
+  const [docs, setDocs] = useState<Doc[]>([]);
   const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => { load(); }, []);
 
   const load = async () => {
     setCvs((await window.electronAPI.listCvs()) as any[]);
@@ -35,7 +42,7 @@ export default function Workflow() {
     if (!selectedCv || !selectedJob) return;
     setStatus('Evaluating...');
     try {
-      const r = await window.electronAPI.evaluate(selectedCv, selectedJob);
+      const r = await window.electronAPI.evaluate(selectedCv, selectedJob) as EvalResult;
       setEvalResult(r);
       setStatus(null);
     } catch (e) {
@@ -47,7 +54,7 @@ export default function Workflow() {
     if (!selectedCv || !selectedJob) return;
     setStatus('Generating...');
     try {
-      const r = await window.electronAPI.generateDocument(selectedCv, selectedJob, kind);
+      const r = await window.electronAPI.generateDocument(selectedCv, selectedJob, kind) as Doc;
       setDoc(r);
       const list = await window.electronAPI.listDocuments(selectedCv, selectedJob);
       setDocs(list as any[]);
@@ -105,7 +112,7 @@ export default function Workflow() {
       <button onClick={() => genDoc('tailored-cv')}>Generate tailored CV</button>
       <button onClick={() => genDoc('cover-letter')}>Generate cover letter</button>
       {doc && <pre>{doc.content}</pre>}
-      <select onChange={(e) => setDoc(docs.find((d) => d.id === Number(e.target.value)))}>
+      <select onChange={(e) => { const found = docs.find((d) => d.id === Number(e.target.value)); setDoc(found ?? null); } }>
         <option value="">History</option>
         {docs.map((d) => <option key={d.id} value={d.id}>{d.kind}</option>)}
       </select>
