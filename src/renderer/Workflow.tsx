@@ -119,6 +119,9 @@ export default function Workflow() {
       <button onClick={() => exportDoc('md')}>Export MD</button>
       <button onClick={() => exportDoc('txt')}>Export TXT</button>
       {status && <p>{status}</p>}
+      <h2>Backup</h2>
+      <button onClick={async () => { setStatus('Backing up...'); const r:any = await window.electronAPI.createBackup(); setStatus(r.canceled ? 'Cancelled' : (r.ok === false ? r.error : 'Backup created')); } }>Create Backup</button>
+      <button onClick={async () => { setStatus('Restoring...'); const r:any = await window.electronAPI.restoreBackup(); setStatus(r.canceled ? 'Cancelled' : (r.ok ? 'Restored' : r.error)); } }>Restore Backup</button>
     </section>
   );
 }

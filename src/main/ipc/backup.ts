@@ -38,8 +38,8 @@ export function registerBackupHandlers(ipcMainLike: IpcRegistrar): void {
     }
     // integrity
     try {
-      const ok = candidate.pragma('integrity_check') as unknown;
-      if (ok !== 'ok') throw new Error('integrity');
+      const rows = candidate.pragma('integrity_check') as { integrity_check: string }[];
+      if (!Array.isArray(rows) || rows.length === 0 || rows.some((r) => r.integrity_check !== 'ok')) throw new Error('integrity');
     } catch {
       closeDatabase(candidate);
       return { canceled: false, ok: false, error: 'Backup failed integrity check.' };
