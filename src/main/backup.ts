@@ -53,7 +53,12 @@ export async function restoreBackup(dbPath: string, backupPath: string, migratio
         // keep safety file as recovery copy
       }
     }
-    try { openDatabase(dbPath); } catch {}
+    try {
+      openDatabase(dbPath);
+    } catch {
+      // Reopening is best-effort: the previous database file is already
+      // restored on disk, so the app can open it again on the next start.
+    }
     return { ok: false, error: 'Restore failed; previous database retained.' };
   }
 }
