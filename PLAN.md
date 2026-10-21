@@ -1,6 +1,6 @@
 # Local Career Assistant — Project Plan
 
-Status: **Implemented. Phases 0–2 complete. Awaiting approval to proceed to Phase 3.**
+Status: **Phases 0–3 merged. Phase 4 in progress.**
 
 ## 1. Repository status
 - `/home/avrbt/Downloads/local-career-assistant` is a git repo on branch `feat/phase-1-persistence`
