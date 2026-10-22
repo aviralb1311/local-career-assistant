@@ -1,30 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-// Allowed IPC channels. Renderer may only invoke these.
-// Phase 1 adds read-only database channels; migrations run internally
-// at startup and are not exposed to the renderer.
-// Phase 2 adds narrowly scoped AI provider, settings, consent, and
-// secret-handling channels. No generic invoke passthrough.
-export const allowedChannels = [
-  'app:ping',
-  'db:ping',
-  'db:version',
-  'ai:providers',
-  'ai:getSettings',
-  'ai:setSettings',
-  'ai:isCloudAllowed',
-  'ai:requireConsent',
-  'ai:grantConsent',
-  'ai:denyConsent',
-  'ai:generateText',
-  'ai:generateJSON',
-  'ai:setSecret',
-  'ai:deleteSecret',
-  'ai:listAuditLog',
-  'wf:exportDocument',
-] as const;
-
-type AllowedChannel = (typeof allowedChannels)[number];
+import { allowedChannels, type AllowedChannel } from './channels.js';
 
 // Build the API object first so its type can be referenced, then expose it.
 const electronAPI = {
@@ -113,6 +89,7 @@ const electronAPI = {
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
 export type ElectronAPI = typeof electronAPI;
+export { allowedChannels };
 export type { AllowedChannel };
 
 declare global {
