@@ -4,7 +4,7 @@ import path from 'node:path';
 
 test('Electron smoke: basic window opens', async () => {
   const app = await electron.launch({
-    args: [path.join(process.cwd(), 'tests/e2e/support/smoke-main.js'), '--disable-gpu'],
+    args: ['--disable-gpu', path.join(process.cwd(), 'tests/e2e/support/smoke-main.js')],
     env: process.env as Record<string, string>,
   });
   const proc = app.process();
