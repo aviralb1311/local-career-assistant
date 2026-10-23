@@ -13,8 +13,11 @@ export async function launchApp(): Promise<LaunchedApp> {
     app = await electron.launch({
       args: ['.', '--user-data-dir=' + userDataDir],
       env: process.env as Record<string, string>,
+      timeout: 30000,
     });
-    const page = await app.firstWindow();
+    const page = await app.firstWindow({ timeout: 30000 });
+    page.on('console', (msg) => console.log(`[renderer:${msg.type()}] ${msg.text()}`));
+    page.on('pageerror', (err) => console.error(`[renderer:pageerror] ${err.message}`));
     await page.waitForLoadState('domcontentloaded');
     return { app, page, userDataDir };
   } catch (error) {
