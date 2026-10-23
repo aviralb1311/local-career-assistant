@@ -13,6 +13,10 @@ import { registerWorkflowHandlers } from './ipc/workflow.js';
 import { registerTrackingHandlers } from './ipc/tracking.js';
 import { registerBackupHandlers } from './ipc/backup.js';
 
+console.error('[main] entry point reached');
+process.on('uncaughtException', (err) => console.error('[main] uncaughtException:', err));
+process.on('unhandledRejection', (err) => console.error('[main] unhandledRejection:', err));
+
 let mainWindow: BrowserWindow | null = null;
 let dbPath: string = getDefaultDbPath();
 let aiService: AIService | null = null;
@@ -30,10 +34,20 @@ function createWindow() {
   });
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    console.error('[main] loadURL (dev):', process.env.VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
+      .then(() => console.error('[main] loadURL resolved'))
+      .catch((err) => console.error('[main] loadURL failed:', err));
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../../dist/renderer/index.html'));
+    const filePath = path.join(__dirname, '../../dist/renderer/index.html');
+    console.error('[main] loadFile:', filePath);
+    mainWindow.loadFile(filePath)
+      .then(() => console.error('[main] loadFile resolved'))
+      .catch((err) => console.error('[main] loadFile failed:', err));
   }
+  mainWindow.webContents.on('render-process-gone', (_e, details) => console.error('[main] render-process-gone:', details));
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc, url) => console.error('[main] did-fail-load:', code, desc, url));
+  mainWindow.webContents.on('did-finish-load', () => console.error('[main] did-finish-load'));
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -78,8 +92,16 @@ function requireAIService(): AIService {
   return aiService;
 }
 
+app.on('will-finish-launching', () => console.error('[main] will-finish-launching'));
+app.on('ready', () => console.error('[main] ready event'));
+app.on('window-all-closed', () => console.error('[main] window-all-closed'));
+app.on('before-quit', () => console.error('[main] before-quit'));
+
 app.whenReady().then(() => {
+  console.error('[main] whenReady resolved');
+  console.error('[main] initializing database');
   initializeDatabase();
+  console.error('[main] creating window');
   createWindow();
 
   // Read-only IPC handlers only. No migration execution or database access
@@ -102,12 +124,14 @@ app.whenReady().then(() => {
   registerTrackingHandlers(ipcMain, getActiveDb);
   registerBackupHandlers(ipcMain);
 
+  console.error('[main] handlers registered');
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
-});
+}).catch((err) => console.error('[main] whenReady rejected:', err));
 
 app.on('will-quit', () => {
   closeDatabase();
