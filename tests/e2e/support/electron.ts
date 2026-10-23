@@ -1,0 +1,33 @@
+import { _electron as electron } from '@playwright/test';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type { ElectronApplication, Page } from '@playwright/test';
+
+export type LaunchedApp = { app: ElectronApplication; page: Page; userDataDir: string };
+
+export async function launchApp(): Promise<LaunchedApp> {
+  const userDataDir = mkdtempSync(join(tmpdir(), 'lca-e2e-'));
+  const app = await electron.launch({
+    args: ['.', '--user-data-dir=' + userDataDir],
+    env: process.env as Record<string, string>,
+  });
+  const page = await app.firstWindow();
+  await page.waitForLoadState('domcontentloaded');
+  return { app, page, userDataDir };
+}
+
+export async function closeApp(launched: LaunchedApp): Promise<void> {
+  await launched.app.close();
+  rmSync(launched.userDataDir, { recursive: true, force: true });
+}
+
+export function dbPathFor(userDataDir: string): string {
+  return join(userDataDir, 'app.db');
+}
+
+export function assertDbCreated(userDataDir: string): void {
+  if (!existsSync(dbPathFor(userDataDir))) {
+    throw new Error('Expected SQLite database was not created in the isolated user data directory.');
+  }
+}
