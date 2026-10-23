@@ -12,6 +12,7 @@ export async function launchApp(): Promise<LaunchedApp> {
   try {
     app = await electron.launch({
       args: ['.', '--user-data-dir=' + userDataDir],
+      cwd: process.cwd(),
       env: process.env as Record<string, string>,
       timeout: 30000,
     });
