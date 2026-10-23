@@ -79,7 +79,9 @@ export function registerTrackingHandlers(ipcMainLike: IpcRegistrar, getDb: () =>
 
   ipcMainLike.handle('tr:delete', async (_e, id: unknown) => {
     if (!isPosInt(id)) throw new Error('Invalid id.');
-    repo.deleteApplication(requireDb(getDb()), id);
+    const db = requireDb(getDb());
+    if (!repo.getApplication(db, id)) throw new Error('Not found');
+    repo.deleteApplication(db, id);
     return { ok: true };
   });
 
