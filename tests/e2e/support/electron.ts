@@ -15,6 +15,10 @@ export async function launchApp(): Promise<LaunchedApp> {
       env: process.env as Record<string, string>,
       timeout: 30000,
     });
+    const proc = app.process();
+    proc.stdout?.on('data', (d) => process.stdout.write(`[electron:stdout] ${d}`));
+    proc.stderr?.on('data', (d) => process.stderr.write(`[electron:stderr] ${d}`));
+    proc.on('exit', (code, signal) => console.error(`[electron:exit] code=${code} signal=${signal}`));
     const page = await app.firstWindow({ timeout: 30000 });
     page.on('console', (msg) => console.log(`[renderer:${msg.type()}] ${msg.text()}`));
     page.on('pageerror', (err) => console.error(`[renderer:pageerror] ${err.message}`));
