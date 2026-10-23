@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Workflow from './Workflow';
+import Tracking from './Tracking';
 
 type ProviderInfo = {
   id: string;
@@ -234,6 +235,7 @@ export default function App() {
         </section>
       </main>
     <Workflow />
+      <Tracking />
 </div>
   );
 }
