@@ -12,12 +12,12 @@ test('meaningful workflow: CV, job, tracking persistence', async () => {
     await page.locator('input[placeholder="Title"]').first().fill('My CV');
     await page.locator('textarea[placeholder="Content"]').first().fill('Experience with TypeScript');
     await page.getByRole('button', { name: 'Create CV' }).click();
-    await expect(page.getByText('My CV')).toBeVisible();
+    await expect(page.getByRole('listitem').filter({ hasText: 'My CV' })).toBeVisible();
 
     await page.locator('input[placeholder="Title"]').nth(1).fill('Engineer');
     await page.locator('textarea[placeholder="Description"]').first().fill('Need TypeScript');
     await page.getByRole('button', { name: 'Create Job' }).click();
-    await expect(page.getByText('Engineer')).toBeVisible();
+    await expect(page.getByRole('listitem').filter({ hasText: 'Engineer' })).toBeVisible();
 
     await page.getByPlaceholder('Company').fill('Acme');
     await page.getByPlaceholder('Role').fill('Engineer');
