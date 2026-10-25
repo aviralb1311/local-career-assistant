@@ -43,7 +43,7 @@ function createWindow() {
       .then(() => console.error('[main] loadURL resolved'))
       .catch((err) => console.error('[main] loadURL failed:', err));
   } else {
-    const filePath = path.join(__dirname, '../../dist/renderer/index.html');
+    const filePath = path.join(__dirname, '../../../dist/renderer/index.html');
     console.error('[main] loadFile:', filePath);
     mainWindow.loadFile(filePath)
       .then(() => console.error('[main] loadFile resolved'))

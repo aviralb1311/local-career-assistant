@@ -10,7 +10,7 @@
   "main": "dist/electron/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build:main": "tsc -p tsconfig.node.json && npm run build:copy-migrations",
+    "build:main": "tsc -p tsconfig.node.json && tsc -p tsconfig.preload.json && npm run build:copy-migrations",
     "build:copy-migrations": "node scripts/copy-migrations.js",
     "build:renderer": "vite build",
     "build": "npm run build:main && npm run build:renderer && electron-builder",
