@@ -7,7 +7,7 @@ test.setTimeout(90000);
 test('Electron smoke: basic window opens', async () => {
   console.error('[smoke-test] starting launch');
   const app = await electron.launch({
-    args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', path.join(process.cwd(), 'tests/e2e/support/smoke-main.js')],
+    args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', path.join(process.cwd(), 'tests/e2e/support/smoke-main.cjs')],
     env: process.env as Record<string, string>,
     timeout: 90000,
   });
