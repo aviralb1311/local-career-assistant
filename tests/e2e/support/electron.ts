@@ -11,7 +11,7 @@ export async function launchApp(): Promise<LaunchedApp> {
   let app: ElectronApplication | undefined;
   try {
     app = await electron.launch({
-      args: ['.', '--user-data-dir=' + userDataDir, '--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '.', '--user-data-dir=' + userDataDir],
       cwd: process.cwd(),
       env: process.env as Record<string, string>,
       timeout: 60000,

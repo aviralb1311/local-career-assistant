@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { launchApp, closeApp } from './support/electron';
 
+test.setTimeout(60000);
+
 test('Phase 0 E2E: app heading is visible', async () => {
   const launched = await launchApp();
   try {

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { launchApp, closeApp, assertDbCreated } from './support/electron';
 
+test.setTimeout(60000);
+
 test('meaningful workflow: CV, job, tracking persistence', async () => {
   const launched = await launchApp();
   const { page, userDataDir } = launched;

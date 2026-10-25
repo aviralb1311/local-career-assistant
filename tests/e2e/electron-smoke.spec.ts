@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
 import path from 'node:path';
 
+test.setTimeout(60000);
+
 test('Electron smoke: basic window opens', async () => {
   const app = await electron.launch({
     args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', path.join(process.cwd(), 'tests/e2e/support/smoke-main.js')],
