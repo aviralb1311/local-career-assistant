@@ -10,7 +10,7 @@
   "main": "dist/electron/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build:main": "tsc -p tsconfig.node.json && tsc -p tsconfig.preload.json && node scripts/build-preload-cjs.js && npm run build:copy-migrations",
+    "build:main": "tsc -p tsconfig.node.json && node scripts/build-preload.mjs && npm run build:copy-migrations",
     "build:copy-migrations": "node scripts/copy-migrations.js",
     "build:renderer": "vite build",
     "build": "npm run build:main && npm run build:renderer && electron-builder",
@@ -33,12 +33,15 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/ui": "^5.0.5",
     "autoprefixer": "^10.4.0",
     "electron": "^28.0.0",
     "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "jsdom": "^24.0.0",
     "postcss": "^8.4.0",
     "prettier": "^3.2.0",
     "react": "^18.2.0",
@@ -46,8 +49,6 @@
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.0",
     "vite": "^6.4.4",
-    "vitest": "^5.0.5",
-    "@vitest/ui": "^5.0.5",
-    "jsdom": "^24.0.0"
+    "vitest": "^5.0.5"
   }
 }
