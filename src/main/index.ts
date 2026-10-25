@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   closeDatabase,
   getActiveDb,
@@ -12,6 +13,9 @@ import { registerAIHandlers } from './ipc/ai.js';
 import { registerWorkflowHandlers } from './ipc/workflow.js';
 import { registerTrackingHandlers } from './ipc/tracking.js';
 import { registerBackupHandlers } from './ipc/backup.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 console.error('[main] entry point reached');
 process.on('uncaughtException', (err) => console.error('[main] uncaughtException:', err));
