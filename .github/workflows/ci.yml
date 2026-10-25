@@ -42,6 +42,13 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Verify build artifacts
+        run: |
+          test -f dist/renderer/index.html
+          test -f dist/electron/preload/index.cjs
+          test -f dist/electron/main/index.js
+          echo "Artifacts OK"
+
       - name: Install Playwright Chromium browser
         run: npx playwright install --with-deps chromium
 
