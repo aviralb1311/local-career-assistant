@@ -8,24 +8,30 @@ export type LaunchedApp = { app: ElectronApplication; page: Page; userDataDir: s
 
 export async function launchApp(): Promise<LaunchedApp> {
   const userDataDir = mkdtempSync(join(tmpdir(), 'lca-e2e-'));
+  console.error('[launchApp] userDataDir:', userDataDir);
   let app: ElectronApplication | undefined;
   try {
     app = await electron.launch({
       args: ['--disable-gpu', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '.', '--user-data-dir=' + userDataDir],
       cwd: process.cwd(),
       env: process.env as Record<string, string>,
-      timeout: 60000,
+      timeout: 90000,
     });
+    console.error('[launchApp] launched');
     const proc = app.process();
     proc.stdout?.on('data', (d) => process.stdout.write(`[electron:stdout] ${d}`));
     proc.stderr?.on('data', (d) => process.stderr.write(`[electron:stderr] ${d}`));
     proc.on('exit', (code, signal) => console.error(`[electron:exit] code=${code} signal=${signal}`));
-    const page = await app.firstWindow({ timeout: 60000 });
+    proc.on('error', (err) => console.error(`[electron:error] ${err}`));
+    console.error('[launchApp] waiting for first window');
+    const page = await app.firstWindow({ timeout: 90000 });
+    console.error('[launchApp] got window');
     page.on('console', (msg) => console.log(`[renderer:${msg.type()}] ${msg.text()}`));
     page.on('pageerror', (err) => console.error(`[renderer:pageerror] ${err.message}`));
     await page.waitForLoadState('domcontentloaded');
     return { app, page, userDataDir };
   } catch (error) {
+    console.error('[launchApp] error:', error);
     if (app) {
       try {
         await app.close();
