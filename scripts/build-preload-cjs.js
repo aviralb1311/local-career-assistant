@@ -9,14 +9,9 @@ const channelsCjs = join(preloadDir, 'channels.cjs');
 
 if (existsSync(channelsJs)) {
   renameSync(channelsJs, channelsCjs);
-} else if (existsSync(join(preloadDir, 'channels.cjs')) && !existsSync(channelsCjs)) {
-  // already moved
 }
-
 if (existsSync(indexJs)) {
   renameSync(indexJs, indexCjs);
-} else if (!existsSync(indexCjs) && existsSync(join(preloadDir, 'index.cjs'))) {
-  // ok
 }
 
 if (existsSync(indexCjs)) {
@@ -24,4 +19,10 @@ if (existsSync(indexCjs)) {
   content = content.replace(/require\(['"]\.\/channels\.js['"]\)/g, "require('./channels.cjs')");
   content = content.replace(/require\(['"]\.\/channels['"]\)/g, "require('./channels.cjs')");
   writeFileSync(indexCjs, content);
+}
+
+// Ensure channels.cjs exists and index.cjs can resolve it
+const hasChannelsCjs = existsSync(channelsCjs);
+if (!hasChannelsCjs) {
+  throw new Error('channels.cjs not found after build');
 }
