@@ -44,7 +44,7 @@ All personal data is stored in a single SQLite file (`app.db`) under your platfo
 
 The database uses SQLite's default rollback journal mode (single file, no WAL sidecar files in Phase 1).
 
-Backups are not yet implemented (planned for a later phase). Until then, manually copy the `app.db` file to back up your data.
+Backups can be created and restored from the Backup section of the app. A backup copies `app.db` to a user-chosen location; restore replaces the live database with the backup file after a read-only integrity check and a safety snapshot of the current database. If restore fails, the original database is preserved.
 
 ## Security
 - Cloud AI is off by default.

@@ -2,9 +2,7 @@
 
 ## Status
 
-**Implemented.** Security controls for Phases 0–2 are in place, including a
-Phase 2 security-hardening pass. Phase 5 (polish + hardening) will add CSP,
-DOMPurify on all rendered untrusted content, and a complete threat model.
+**Implemented.** Security controls for Phases 0–2 are in place, including a Phase 2 security-hardening pass. Phase 5 (polish + hardening) will add CSP and DOMPurify on all rendered untrusted content; the threat model is documented below.
 
 ## Core guarantees (by design)
 
@@ -64,7 +62,7 @@ Provider errors are mapped through `sanitizeError` (`src/main/ai/service.ts`) to
 | Secrets/API keys committed or logged | High | keytar / OS keychain; never log keys; `.env` in `.gitignore`; `npm audit` in CI; no `getSecret` over IPC |
 | Plaintext secret retrieval over IPC | High | `ai:getSecret` channel removed; only write-only `setSecret`/`deleteSecret` exposed |
 | SQLite corruption / failed migration | Medium | Migrations in transactions, `PRAGMA integrity_check` on startup, backups before migrations |
-| Data loss (device failure) | High | Backup/restore feature, dated backups folder, "export all data" (JSON) |
+| Data loss (device failure) | High | Backup/restore feature: user-selected backup file, read-only integrity check before restore, safety snapshot of the live database, rollback to the snapshot on restore failure; DB stored in user data dir (not temp) |
 | Prompt injection from untrusted JDs | High | System prompt instructs model to treat JD as data only; JD sanitized on read; strict output schema; model output validated before use |
 | Sensitive data in logs | High | No PII, CV content, or secrets in console/app logs; redaction before any logging |
 | Dependency supply chain | Medium | `npm audit` / `npm ci` in CI, lockfile committed, minimal dependencies |
