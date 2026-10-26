@@ -1,29 +1,32 @@
-import { closeDatabase, openDatabase } from './db.js';
+import { closeDatabase, openDatabase, openReadonlyDatabase, type DbConnection } from './db.js';
 import { applyMigrations } from './migrate.js';
 import fs from 'node:fs';
 
 export interface BackupResult { ok: boolean; error?: string; }
 
 export async function createBackupFile(sourcePath: string, destPath: string): Promise<void> {
-  const db = openDatabase(sourcePath);
+  // Open the source read-only so it can be backed up without conflicting
+  // with the active application database connection.
+  const db = openReadonlyDatabase(sourcePath);
   try {
     await db.backup(destPath);
   } finally {
-    closeDatabase(db);
+    db.close();
   }
 }
 
 export function validateBackup(candidatePath: string): boolean {
-  let db;
+  let db: DbConnection | undefined;
   try {
-    db = openDatabase(candidatePath);
+    // Open the candidate read-only; never registers in the active singleton.
+    db = openReadonlyDatabase(candidatePath);
     const rows = db.pragma('integrity_check') as { integrity_check: string }[];
     if (!Array.isArray(rows) || rows.length === 0 || rows.some((r) => r.integrity_check !== 'ok')) return false;
     return true;
   } catch {
     return false;
   } finally {
-    if (db) closeDatabase(db);
+    if (db) db.close();
   }
 }
 
@@ -33,16 +36,23 @@ export async function restoreBackup(dbPath: string, backupPath: string, migratio
 
   const safetyPath = dbPath + '.safety';
   try {
-    // consistent safety snapshot
-    const active = openDatabase(dbPath);
-    await active.backup(safetyPath);
-    closeDatabase(active);
+    // Consistent safety snapshot of the live database, read-only, without
+    // disturbing the active application connection.
+    const active = openReadonlyDatabase(dbPath);
+    try {
+      await active.backup(safetyPath);
+    } finally {
+      active.close();
+    }
 
     closeDatabase();
     fs.copyFileSync(backupPath, dbPath);
     const db = openDatabase(dbPath);
-    applyMigrations(db, migrationsDir);
-    closeDatabase(db);
+    try {
+      applyMigrations(db, migrationsDir);
+    } finally {
+      closeDatabase(db);
+    }
     if (fs.existsSync(safetyPath)) fs.unlinkSync(safetyPath);
     return { ok: true };
   } catch {
@@ -54,6 +64,7 @@ export async function restoreBackup(dbPath: string, backupPath: string, migratio
       }
     }
     try {
+      closeDatabase();
       openDatabase(dbPath);
     } catch {
       // Reopening is best-effort: the previous database file is already
