@@ -19,8 +19,8 @@ test('meaningful workflow: CV, job, tracking persistence', async () => {
     await page.getByRole('button', { name: 'Create Job' }).click();
     await expect(page.getByRole('listitem').filter({ hasText: 'Engineer' })).toBeVisible();
 
-    await page.getByPlaceholder('Company').fill('Acme');
-    await page.getByPlaceholder('Role').fill('Engineer');
+    await page.getByRole('textbox', { name: 'Company', exact: true }).fill('Acme');
+    await page.getByRole('textbox', { name: 'Role', exact: true }).fill('Engineer');
     await page.getByRole('button', { name: 'Add Application' }).click();
     await expect(page.getByText('Acme — Engineer')).toBeVisible();
 
