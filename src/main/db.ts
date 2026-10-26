@@ -53,6 +53,31 @@ export function openDatabase(dbPath?: string): DbConnection {
   return db;
 }
 
+/**
+ * Opens a database file on a standalone connection that is NOT registered in
+ * the active application database singleton.
+ *
+ * Intended for inspecting backup files without disturbing the live application
+ * connection. Opened read-only so the source can never be modified through
+ * this handle. The caller is responsible for closing the returned connection,
+ * preferably in a `finally` block.
+ */
+export function openReadonlyDatabase(dbPath: string): DbConnection {
+  const db = new Database(dbPath, { readonly: true });
+
+  try {
+    // Verify the connection is usable.
+    db.prepare('SELECT 1').get();
+  } catch (error) {
+    db.close();
+    throw new Error(
+      `Failed to open backup database: ${(error as Error).message}`
+    );
+  }
+
+  return db;
+}
+
 export function closeDatabase(db?: DbConnection): void {
   const target = db ?? activeDb;
   if (!target) {
