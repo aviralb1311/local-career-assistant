@@ -24,14 +24,22 @@ test('meaningful workflow: CV, job, tracking persistence', async () => {
     await page.getByRole('button', { name: 'Add Application' }).click();
     await expect(page.getByText('Acme — Engineer')).toBeVisible();
 
-    const statusSelect = page.locator('select').filter({ hasText: 'saved' }).first();
+    // Scope to the application list item to target its status dropdown,
+    // not the "Add Application" form's status select elsewhere on the page.
+    const appItem = page.getByRole('listitem').filter({ hasText: 'Acme — Engineer' });
+    const statusSelect = appItem.locator('select').first();
     await statusSelect.selectOption('applied');
     await expect(statusSelect).toHaveValue('applied');
 
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
     await expect(page.getByText('Acme — Engineer')).toBeVisible();
-    await expect(page.locator('select').filter({ hasText: 'applied' }).first()).toHaveValue('applied');
+    const reloadedStatusSelect = page
+      .getByRole('listitem')
+      .filter({ hasText: 'Acme — Engineer' })
+      .locator('select')
+      .first();
+    await expect(reloadedStatusSelect).toHaveValue('applied');
 
     assertDbCreated(userDataDir);
   } finally {
