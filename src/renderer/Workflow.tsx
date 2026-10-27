@@ -78,7 +78,7 @@ export default function Workflow() {
       <textarea placeholder="Content" value={cvContent} onChange={(e) => setCvContent(e.target.value)} />
       <button onClick={createCv}>Create CV</button>
       <button onClick={load}>Refresh</button>
-      <ul>{cvs.map((c) => <li key={c.id}>{c.title}</li>)}</ul>
+      <ul>{cvs.map((c) => <li key={c.id}>{c.title}: {c.content}</li>)}</ul>
 
       <h2>Jobs</h2>
       <input placeholder="Title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
