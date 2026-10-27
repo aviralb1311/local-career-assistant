@@ -11,6 +11,7 @@ import type {
   ProviderSettings,
 } from './types.js';
 import { OllamaProvider } from './ollama.js';
+import { FakeAIProvider } from './fake.js';
 import { OpenAICompatibleProvider } from './openai.js';
 import { createAuditService, createConsentService } from './consent.js';
 import { createSecretsService } from './secrets.js';
@@ -144,7 +145,9 @@ export class AIService {
     const settings = this.getSettingsSync();
     let provider: import('./types.js').LLMProvider;
 
-    if (providerId === 'ollama') {
+    if (process.env.LCA_E2E_FAKE_AI === '1') {
+      provider = new FakeAIProvider();
+    } else if (providerId === 'ollama') {
       provider = new OllamaProvider(
         settings.ollamaEndpoint,
         settings.ollamaModel
