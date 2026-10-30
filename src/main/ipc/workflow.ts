@@ -6,7 +6,7 @@ import { generateDocument } from '../workflow/document.js';
 import { ValidationError } from '../ai/validation.js';
 import type { AIService } from '../ai/service.js';
 import { dialog } from 'electron';
-import { writeFile } from 'node:fs/promises';
+import { writeFile, rename, unlink } from 'node:fs/promises';
 
 function isPosInt(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v > 0 && Number.isSafeInteger(v);
@@ -93,15 +93,35 @@ export function registerWorkflowHandlers(
 
   ipcMainLike.handle('wf:exportDocument', async (_e, docId: unknown, format: unknown) => {
     if (!isPosInt(docId)) throw new ValidationError('Invalid id.');
-    if (format !== 'md' && format !== 'txt') throw new ValidationError('Invalid format.');
+    if (format !== 'md' && format !== 'txt' && format !== 'pdf') throw new ValidationError('Invalid format.');
     const db = requireDb(getDb());
     const row = db.prepare('SELECT content FROM documents WHERE id = ?').get(docId) as { content: string } | undefined;
     if (!row) throw new ValidationError('Document not found.');
-    const { exportMarkdown, exportPlainText } = await import('../workflow/export.js');
-    const data = format === 'md' ? exportMarkdown(row.content) : exportPlainText(row.content);
-    const { filePath, canceled } = await dialog.showSaveDialog({ filters: [{ name: format === 'md' ? 'Markdown' : 'Text', extensions: [format] }] });
+    const { exportMarkdown, exportPlainText, exportPdf } = await import('../workflow/export.js');
+    let data: string | Buffer;
+    if (format === 'md') data = exportMarkdown(row.content);
+    else if (format === 'txt') data = exportPlainText(row.content);
+    else data = await exportPdf(row.content);
+    const filterName = format === 'md' ? 'Markdown' : format === 'txt' ? 'Text' : 'PDF';
+    const { filePath, canceled } = await dialog.showSaveDialog({ filters: [{ name: filterName, extensions: [format] }] });
     if (canceled || !filePath) return { canceled: true };
-    await writeFile(filePath, data, 'utf8');
+
+    // Write to a temporary file in the destination directory, then atomically
+    // rename it into place. This prevents partial or corrupt files from
+    // remaining if the write fails, and never touches an existing destination
+    // file until the full payload has been written successfully.
+    const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}`;
+    try {
+      await writeFile(tmpPath, data);
+      await rename(tmpPath, filePath);
+    } catch (err) {
+      try {
+        await unlink(tmpPath);
+      } catch {
+        // Ignore cleanup errors; the temp file is best-effort.
+      }
+      throw err;
+    }
     return { canceled: false, filePath };
   });
 }
