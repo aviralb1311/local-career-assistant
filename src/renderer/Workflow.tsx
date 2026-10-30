@@ -64,11 +64,15 @@ export default function Workflow() {
     }
   };
 
-  const exportDoc = async (format: 'md' | 'txt') => {
+  const exportDoc = async (format: 'md' | 'txt' | 'pdf') => {
     if (!doc) return;
-    const r: any = await window.electronAPI.exportDocument(doc.id, format);
-    if (r.canceled) setStatus('Export cancelled');
-    else setStatus('Exported');
+    try {
+      const r: any = await window.electronAPI.exportDocument(doc.id, format);
+      if (r.canceled) setStatus('Export cancelled');
+      else setStatus('Exported');
+    } catch (e) {
+      setStatus(`Export failed: ${(e as Error).message}`);
+    }
   };
 
   return (
@@ -112,6 +116,7 @@ export default function Workflow() {
       <button onClick={() => genDoc('tailored-cv')}>Generate tailored CV</button>
       <button onClick={() => genDoc('cover-letter')}>Generate cover letter</button>
       {doc && <pre>{doc.content}</pre>}
+      {doc && <button onClick={() => exportDoc('pdf')}>Export PDF</button>}
       <select onChange={(e) => { const found = docs.find((d) => d.id === Number(e.target.value)); setDoc(found ?? null); } }>
         <option value="">History</option>
         {docs.map((d) => <option key={d.id} value={d.id}>{d.kind}</option>)}

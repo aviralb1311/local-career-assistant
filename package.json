@@ -10,8 +10,9 @@
   "main": "dist/electron/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build:main": "tsc -p tsconfig.node.json && node scripts/build-preload.mjs && npm run build:copy-migrations",
+    "build:main": "tsc -p tsconfig.node.json && node scripts/build-preload.mjs && npm run build:copy-migrations && npm run build:copy-assets",
     "build:copy-migrations": "node scripts/copy-migrations.js",
+    "build:copy-assets": "node scripts/copy-assets.mjs",
     "build:renderer": "vite build",
     "build": "npm run build:main && npm run build:renderer && electron-builder --publish never",
     "lint": "eslint . --ext ts,tsx,js",
@@ -21,8 +22,10 @@
     "audit": "npm audit"
   },
   "dependencies": {
+    "@types/pdfkit": "^0.17.7",
     "better-sqlite3": "^11.0.0",
-    "keytar": "^7.9.0"
+    "keytar": "^7.9.0",
+    "pdfkit": "^0.20.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
