@@ -16,7 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev xvfb x11-utils
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev xvfb x11-utils poppler-utils
+
+      - name: Verify PDF tools
+        run: pdftotext -v | head -1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
