@@ -179,7 +179,7 @@ Relationships: `fit_evaluations` references `cv_versions` + `job_descriptions`; 
 | **2** | AI layer: `LLMProvider` interface, Ollama provider (HTTP), OpenAI-compatible provider stub, consent gate + audit logging, settings UI (provider/model/cloud toggle), keychain secret storage | Phase 1 | **Complete** | Local AI callable from app; cloud disabled by default |
 | **3** | Core flow UI: CV import/paste, profile editor, JD editor, fit evaluation view (score, verdict, evidence, suggestions), tailored CV/cover letter generator, preview + export (Markdown/text) | Phases 1–2 | **Complete** | End-to-end local CV→JD→evaluation→document flow |
 | **4** | Application tracking: applications table UI, status pipeline, dates, notes, link to JD; "restore from backup" in settings | Phases 1–3 | **Complete** | Full MVP feature set complete |
-| **5** | Polish + hardening: CSP, DOMPurify on all rendered untrusted content, E2E Playwright suite, PDF export option, `SECURITY.md` threat model, performance check, release build | Phases 1–4 | **In progress** | Hardened MVP ready for release candidate |
+| **5** | Polish + hardening: CSP, DOMPurify on all rendered untrusted content, E2E Playwright suite, PDF export option (pdfkit + embedded Noto Sans CJK font), `SECURITY.md` threat model, performance check, release build | Phases 1–4 | **In progress** | Hardened MVP ready for release candidate |
 
 ### Phase 0 security and scaffolding constraints (adjusted)
 
@@ -268,7 +268,7 @@ SQLite and filesystem access live exclusively in `src/main/`. The renderer has n
 | 2 | `LLMProvider` interface implemented; Ollama provider calls local model and returns structured output; OpenAI-compatible provider stub exists; cloud disabled by default; per-action consent modal + `audit_log` recording; no secrets or PII in logs; AI IPC handlers (12 channels) registered in main process with narrow allow-list in preload; settings UI with provider list, cloud toggle consent-gated, read-only Ollama settings | **Complete** |
 | 3 | CV import/paste → editable profile; JD paste → fit evaluation returns score + verbatim CV evidence quotes; tailored CV + cover letter generated only from CV evidence (no invented qualifications); preview + Markdown/text export | **Complete** |
 | 4 | Applications table with status pipeline, dates, notes, JD linking; restore-from-backup in settings; full MVP feature set complete end-to-end | **Complete** |
-| 5 | CSP + DOMPurify on all untrusted content; E2E Playwright suite passes with mocked AI providers; PDF export option; `SECURITY.md` threat model complete; release build via electron-builder | **In progress** |
+| 5 | CSP + DOMPurify on all untrusted content; E2E Playwright suite passes with mocked AI providers; PDF export option (pdfkit + embedded Noto Sans CJK font); `SECURITY.md` threat model complete; release build via electron-builder | **In progress** |
 
 ---
 
@@ -332,7 +332,7 @@ The MVP feature set is complete. Remaining work is Phase 5 (polish + hardening):
 - **DOMPurify integration:** Sanitize all rendered untrusted content (CV text, job descriptions, document previews) in `src/renderer/Workflow.tsx` and `src/renderer/Tracking.tsx`. No `innerHTML` usage.
 - **CSP hardening:** Remove `'unsafe-inline'` from `src/renderer/index.html` Content-Security-Policy where possible.
 - **Comprehensive E2E coverage:** Expand `tests/e2e/` beyond the two smoke tests to a full happy-path suite (import CV → add JD → evaluate → generate document → export → backup → restore) with mocked AI providers.
-- **PDF export option:** Add PDF generation (e.g., `pdfkit`) as an export format alongside Markdown/text.
+- **PDF export option:** Add PDF generation (`pdfkit` with embedded Noto Sans CJK subset) as an export format alongside Markdown/text. **Done** on `feat/phase-5-pdf-export`.
 - **Dependency remediation:** Address `npm audit` critical/high findings in development toolchain one at a time on feature branches, running full verification after each upgrade.
 - **Release build:** Verify `npm run build` completes via electron-builder and artifacts exist.
 

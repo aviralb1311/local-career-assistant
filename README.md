@@ -46,6 +46,16 @@ The database uses SQLite's default rollback journal mode (single file, no WAL si
 
 Backups can be created and restored from the Backup section of the app. A backup copies `app.db` to a user-chosen location; restore replaces the live database with the backup file after a read-only integrity check and a safety snapshot of the current database. If restore fails, the original database is preserved.
 
+## Exports
+
+Generated tailored CVs and cover letters can be exported in three formats:
+
+- **Markdown (`.md`)** — plain Markdown text, suitable for further editing or version control.
+- **Plain text (`.txt`)** — unformatted text with line endings normalized.
+- **PDF (`.pdf`)** — typeset document generated with [pdfkit](https://pdfkit.org/), using an embedded [Noto Sans CJK KR](https://fonts.google.com/noto/specimen/noto+sans+cjk) TrueType font (SIL Open Font License) so Latin, Greek, Cyrillic, CJK (Chinese/Japanese), Hangul (Korean), Hiragana, Katakana, and common punctuation and currency symbols render correctly. Scripts outside this set (e.g., Arabic, Thai, Devanagari) may render as missing-glyph boxes.
+
+All exports use the operating system's save dialog, so the renderer never chooses a filesystem path directly. Export errors and dialog cancellations are surfaced in the UI status area.
+
 ## Security
 - Cloud AI is off by default.
 - Explicit consent is required before any personal information is sent to a cloud provider.

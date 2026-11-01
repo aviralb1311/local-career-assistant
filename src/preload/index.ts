@@ -82,7 +82,7 @@ const electronAPI = {
   searchApplications: (q: string): Promise<unknown> => ipcRenderer.invoke('tr:search', q),
   createBackup: (): Promise<unknown> => ipcRenderer.invoke('backup:create'),
   restoreBackup: (): Promise<unknown> => ipcRenderer.invoke('backup:restore'),
-  exportDocument: (documentId: number, format: 'md' | 'txt'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
+  exportDocument: (documentId: number, format: 'md' | 'txt' | 'pdf'): Promise<unknown> => ipcRenderer.invoke('wf:exportDocument', documentId, format),
 
 };
 

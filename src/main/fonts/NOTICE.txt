@@ -1,0 +1,7 @@
+Noto Sans CJK KR
+
+This font is part of the Noto family from Google.
+Source: https://github.com/googlefonts/noto-cjk (NotoSansCJK V2.001)
+Copyright © 2012-2019 Adobe Systems Incorporated, Google Inc., and others.
+
+Licensed under the SIL Open Font License, Version 1.1 (see OFL.txt).
